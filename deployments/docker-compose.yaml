@@ -1,0 +1,29 @@
+version: "3.5"
+services:
+  database:
+    image: mysql:5.7
+    restart: always
+    command: --init-file /docker-entrypoint-initdb.d/setup.sql  #setup the database on docker-compose startup
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "userRepository"
+      MYSQL_USER: "perennial"
+      MYSQL_PASSWORD: "perennial"
+    ports:
+    - "3306:3306"
+    expose:
+    - "3306"
+
+  userrepo:
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "8084:8084"
+    depends_on:
+      - database
+volumes:
+  db-data:

@@ -1,0 +1,10 @@
+db:
+  drivername : "mysql"
+  username : "perennial"
+  password : "perennial"
+  host : "localhost"    #uncomment when you are running application on local machine
+  #host : "database"      #use when running in docker and host will change as per service name change of database in docker compose
+  port : "3307"
+  dbname : "userRepository"
+userrepo:
+  port : ":8084"
