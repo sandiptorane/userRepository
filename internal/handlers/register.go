@@ -5,7 +5,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"userRepository/internal/database"
 	"userRepository/internal/user"
 	"userRepository/internal/validation"
 )
@@ -15,7 +14,7 @@ func newUser() *user.Person {
 }
 
 //Registration is endpoint to register new user to userRepository
-func Registration(w http.ResponseWriter,req *http.Request){
+func (handler *Handlers)Registration(w http.ResponseWriter,req *http.Request){
 	log.Println("new user registering to the system")
 
 	w.Header().Set("Content-Type","application/json")
@@ -37,13 +36,13 @@ func Registration(w http.ResponseWriter,req *http.Request){
 		return
 	}
 
-	err = database.InsertUserinfo(person) //store registration data into database userRepository
+	err = handler.Repository.AddUser(person) //store registration data into database userRepository
 	if err!=nil{
-		fmt.Fprintln(w,err.Error())
+		fmt.Fprint(w,err.Error())
 		log.Error(err.Error())
 		return
 	}
 
-	fmt.Fprintln(w,"new user registered successfully")
+	fmt.Fprint(w,"new user registered successfully")
 	log.Println("new user registered successfully")
 }

@@ -6,6 +6,6 @@ import (
 )
 
 //SignOut to signout current user
-func SignOut(w http.ResponseWriter,req *http.Request) {
+func (handler *Handlers)SignOut(w http.ResponseWriter,req *http.Request) {
 	token.ClearToken(w,req)
 }

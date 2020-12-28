@@ -5,25 +5,26 @@ import (
 	"userRepository/internal/user"
 )
 
-func GetProfile(username string) (*user.Person,error){
-	defer log.Println("returning profile details from database")
-	  repository,_ := DbConnect()
-      person := newUser()
-
-      query := `SELECT * FROM userRepository WHERE username = ?`
-      err := repository.Db.Get(&person,query,username)
-      if err!=nil{
-      	return nil,err
-	  }
-	  return &person,nil
+type Profile interface {
+	GetProfile(username string)(*user.Person,error)
+	UpdateProfile(p *user.Person)error
 }
 
 func newUser() user.Person {
 	return user.Person{}
 }
 
-func UpdateProfile(p *user.Person) error {
-	repository, _ := DbConnect()
+func (repository *Datastore)GetProfile(username string)(*user.Person,error){
+	person := newUser()
+	query := `SELECT * FROM userRepository WHERE username = ?`
+	err := repository.Db.Get(&person, query, username)
+	if err != nil {
+		return nil, err
+	}
+	return &person, nil
+}
+
+func (repository *Datastore)UpdateProfile(p *user.Person)error{
 	query := `UPDATE userRepository SET password=?,firstname=?,lastname=?,age=?,gender=?,city=?,country=?,phone=?,email=?,githubUsername=? WHERE username = ?`
 	changes, err := repository.Db.Preparex(query)
 	if err != nil {

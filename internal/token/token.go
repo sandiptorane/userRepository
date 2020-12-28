@@ -49,7 +49,6 @@ func CreateToken(userName string, w http.ResponseWriter,r *http.Request) {
 	fmt.Fprintln(w,tokenString)
 }
 
-
 func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		//tokenString := Tokenstore.token
@@ -70,15 +69,12 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 		if err != nil || !tkn.Valid{
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-
 		}
 
 		endpoint(w, req)
 
 	}
 }
-
-
 
 //ClearToken delete the token of signed user while sign out
 func ClearToken(w http.ResponseWriter,req *http.Request) {

@@ -15,5 +15,8 @@ type Person struct {
 	GithubUsername string `json:"githubUsername,omitempty" validate:"omitempty,startswith=https://github.com/" db:"githubUsername"`
 }
 
-
-
+//Credential for signin
+type Credential struct{
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}

@@ -6,20 +6,15 @@ import (
 	"userRepository/internal/user"
 )
 
-var alreadyExistsError = "user is already present please choose another username"
-
-//InsertUserinfo will register user's details in userRepository table
-func InsertUserinfo(p *user.Person) (err error){
-	repository,err := DbConnect()
-	if err!=nil{
-		return err
-	}
-	//repository.CreateUserRepository() //It will create userRepository table if not exists in the database
-	err = repository.addUser(p)
-	return err
+type Register interface {
+	AddUser(p *user.Person) error
+	userAlreadyExists(username string) bool
 }
 
-func (repository *Datastore)addUser(p *user.Person) error{
+var alreadyExistsError = "user is already present please choose another username"
+
+//AddUser will register user's details in userRepository table
+func (repository *Datastore)AddUser(p *user.Person) error{
 	if repository.userAlreadyExists(p.Username){
 		return errors.New(fmt.Sprintf("%s %s",p.Username, alreadyExistsError))
 	}
@@ -29,10 +24,10 @@ func (repository *Datastore)addUser(p *user.Person) error{
    return err
 }
 
-func (dbInstance *Datastore)userAlreadyExists(username string) bool{
+func (repository *Datastore)userAlreadyExists(username string) bool{
 	query := `SELECT username FROM userRepository WHERE username =?`
 	var returnedUser string
-	err := dbInstance.Db.QueryRowx(query,username).Scan(&returnedUser)
+	err := repository.Db.QueryRowx(query,username).Scan(&returnedUser)
 	if err != nil && returnedUser == ""{
 		return false
 	}

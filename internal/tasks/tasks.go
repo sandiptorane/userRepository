@@ -9,3 +9,7 @@ type Task struct{
 	UrlLink string   `json:"urlLink,omitempty" validate:"omitempty,url"`
 }
 
+type FilteredTasks struct {
+	Id int
+	Task
+}

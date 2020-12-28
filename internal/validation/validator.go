@@ -11,12 +11,16 @@ import (
 	"userRepository/internal/user"
 )
 
-
-
 func ValidateUser(person *user.Person) error{
 	log.Println("validate registration details entered by new user")
 	v := validator.New()
 	err := v.Struct(person)
+	return err
+}
+
+func ValidateCredential(credential *user.Credential)error{
+	v := validator.New()
+	err := v.Struct(credential)
 	return err
 }
 

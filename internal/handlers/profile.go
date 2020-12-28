@@ -5,48 +5,35 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"userRepository/internal/database"
 	"userRepository/internal/token"
 	"userRepository/internal/user"
 	"userRepository/internal/validation"
 )
-
-//ProfileStore
-type ProfileStore interface {
-	getProfile(w http.ResponseWriter,username string)
-	updateProfile(w http.ResponseWriter,r *http.Request,username string)
-}
 
 type profile struct{
    person user.Person
 }
 
 //get profile info and display
-func GetProfile(w http.ResponseWriter,req *http.Request){
+func (handler *Handlers)GetProfile(w http.ResponseWriter,req *http.Request){
 	log.Println("getting profile details")
     w.Header().Set("Content-Type","application/json")
 	username := token.GetUserName(w,req)
-	person := &user.Person{}
-	person,err := database.GetProfile(username)
+	person,err := handler.Repository.GetProfile(username)
 	if err!=nil{
 		log.Fatal(err)
 	}
 	err =json.NewEncoder(w).Encode(person)
-	fmt.Fprintln(w,person)
     if err!=nil{
     	fmt.Fprintln(w,err.Error())
 	}
 }
 
-
 //updateProfile will update the profile of current existent  user
-func UpdateProfile(w http.ResponseWriter,req *http.Request){
+func (handler *Handlers)UpdateProfile(w http.ResponseWriter,req *http.Request){
 	log.Println("updating current user's profile")
 	w.Header().Set("Content-Type","application/json")
 	username := token.GetUserName(w,req)
-	if username == ""{
-		fmt.Println("username is nil")
-	}
 	if req.Body == nil{
 		fmt.Fprintln(w,"nil body passed")
 		return
@@ -68,7 +55,7 @@ func UpdateProfile(w http.ResponseWriter,req *http.Request){
 		fmt.Fprintln(w,"you can,t update username please enter existing username")
 		return
 	}
-	err = database.UpdateProfile(&p.person)
+	err = handler.Repository.UpdateProfile(&p.person)
     if err!=nil{
     	fmt.Fprintln(w,err)
 		return

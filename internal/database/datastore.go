@@ -11,21 +11,18 @@ type Datastore  struct {
 	Db *sqlx.DB
 }
 
-func DbConnect() (*Datastore,error){
+func DbConnect() (*Datastore,error) {
 	//get configs
 	dbConf, err := vipers.GetDbconfigs()
-	if err!=nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	dbInstance := &Datastore{}
 	dbInstance.Db, err = sqlx.Connect(dbConf.Drivername, dbConf.Username+":"+dbConf.Password+"@tcp("+dbConf.Host+":"+dbConf.Port+")/"+dbConf.DbName)
 	if err != nil {
-			log.Error(err)
-			return nil, err
+		log.Error(err)
+		return nil, err
 	}
 	log.Println("Database : connected successfully")
-   return dbInstance,nil
+	return dbInstance, nil
 }
-
-
-

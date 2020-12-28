@@ -5,39 +5,38 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"userRepository/internal/database"
 	"userRepository/internal/token"
+	"userRepository/internal/user"
+	"userRepository/internal/validation"
 )
 
-type Credential struct{
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 
 //SignIn endpoint will allow user to enter in the system
-func SignIn(w http.ResponseWriter,req *http.Request){
+func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request){
 	w.Header().Set("Content-Type","application/json")
-	var creds Credential
+	var creds *user.Credential
 	err := json.NewDecoder(req.Body).Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
-	if !userExists(creds.Username,creds.Password){
+
+	if validationError := validation.ValidateCredential(creds);validationError!=nil{   //validate inputs of user
+		validation.DisplayError(w,validationError)
+		return
+	}
+
+	if !handler.Repository.UserExists(creds.Username,creds.Password){  //check user exists or not in database
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("You are Unauthorized to access the application.\n"))
+		log.Println("sign in unsuccessful")
 		return
 	}
+
 	token.CreateToken(creds.Username,w,req)
 	fmt.Fprintf(w,"Welcome %s !\n",creds.Username)
 	log.Println("user successfully signed in")
 }
 
-func userExists(username string,password string)bool{
-	log.Println("in userExists of signin")
-	if database.UserExists(username,password){
-		return true
-	}
-	return false
-}
