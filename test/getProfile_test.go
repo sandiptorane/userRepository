@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -11,17 +12,18 @@ import (
 	"userRepository/internal/database"
 	"userRepository/internal/handlers"
 	"userRepository/internal/token"
+	"userRepository/internal/user"
 )
 
-func getGithubRouter(userRepo *database.MockUserRepository) *mux.Router{
+func getUpdateProfileRouter(userRepo *database.MockUserRepository) *mux.Router{
 	handler := handlers.NewHandler(userRepo)
 	r := mux.NewRouter()
 	r.HandleFunc("/signin", handler.SignIn).Methods("POST")
-	r.HandleFunc("/github",token.IsAuthorized(handler.Github)).Methods("GET")
+	r.HandleFunc("/profile",token.IsAuthorized(handler.GetProfile)).Methods("GET")
 	return r
 }
 
-type githubTestCase struct {
+type getProfileTestCase struct {
 	name string
 	username string
 	password string
@@ -30,38 +32,37 @@ type githubTestCase struct {
 	expectedResponse string
 }
 
-func getGithubTestCases() []githubTestCase{
-	testCases := []githubTestCase{
+func getProfileTestCases() []getProfileTestCase{
+	testCases := []getProfileTestCase{
 		{
-			name: "If github account exists",
+			name: "Successful",
 			username: "sandip123",
 			password: "sandip@123",
 			buildStubs: func(userRepo *database.MockUserRepository) {
 				username := "sandip123"
-				githubUsername := "https://github.com/sandip123"
-				userRepo.EXPECT().GetGithub(username).Return(githubUsername)
+				userRepo.EXPECT().GetProfile(username).Return(&user.Person{
+									Username:       "sandip123",
+									Password:       "sandip@123",
+									Firstname:      "sandip",
+									Lastname:       "torane",
+									Age:            22,
+									Gender:         "male",
+									City:           "Ichalkaranji",
+									Country:        "India",
+									Phone:          "7945867158",
+									EmailId:        "sandip@gmail.com",
+									GithubUsername: "https://github.com/sandip",},nil)
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: `{"githubUsername":"https://github.com/sandip123"}`,
+			expectedResponse: `{"username":"sandip123","password":"sandip@123","firstname":"sandip","lastname":"torane","age":22,"gender":"male","city":"Ichalkaranji","country":"India","phone":"7945867158","email":"sandip@gmail.com","githubUsername":"https://github.com/sandip"}`,
 		},
-		{
-			name : "If github account doesn't exists",
-			username : "sandip123",
-			password: "sandip@123",
-			buildStubs: func(userRepo *database.MockUserRepository) {
-				username := "sandip123"
-				githubUsername := ""
-				userRepo.EXPECT().GetGithub(username).Return(githubUsername)
-			},
-			expectedStatusCode: http.StatusOK,
-			expectedResponse: `Github account doesn't exist please update the profile`,
-		},
+
 	}
 	return testCases
 }
 
-func TestGithub(t *testing.T){
-	testCases := getGithubTestCases()
+func TestGetProfile(t *testing.T){
+	testCases := getProfileTestCases()
 	for i := range testCases {
 		tc := testCases[i]
 		t.Run(tc.name,func(t *testing.T) {
@@ -77,15 +78,15 @@ func TestGithub(t *testing.T){
 				t.Fatal(err)
 			}
 			response := httptest.NewRecorder()
-			router := getGithubRouter(userRepo)  //mux router
+			router := getUpdateProfileRouter(userRepo)  //mux router
 			router.ServeHTTP(response, req)
 
 			result := response.Result()
 			cookie := result.Cookies()
 
-			//Github handler
+			//GetProfile handler
 			tc.buildStubs(userRepo)
-			req, err = http.NewRequest("GET", "/github",nil)
+			req, err = http.NewRequest("GET", "/profile",nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -98,16 +99,20 @@ func TestGithub(t *testing.T){
 
 			expectedResponse := tc.expectedResponse
 			actualResponse := response.Body.String()
-			assertGithub(t, expectedResponse, actualResponse)
+			checkGetProfileResponse(t, expectedResponse, actualResponse)
 		})
 	}
 }
 
-func assertGithub(t *testing.T,expected string,actualString string){
+func checkGetProfileResponse(t *testing.T,expected string,actualString string){
 	t.Helper()
+	fmt.Printf("expected: %T",expected)
+	fmt.Printf("actual : %T",actualString)
 	if !strings.Contains(actualString,expected){
-		t.Errorf("output should contains '%s' but got '%s'",expected,actualString)
+		t.Errorf("\n output excpected '%s' \n but got '%s':",expected,actualString)
+
 	}
 }
+
 
 
