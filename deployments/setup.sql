@@ -19,10 +19,12 @@ CREATE TABLE IF NOT EXISTS userRepository(
 
 
 CREATE TABLE IF NOT EXISTS task(
+        id  INTEGER NOT NULL AUTO_INCREMENT,
 		username VARCHAR(50) NOT NULL,
 		name TEXT NOT NULL,
     	description TEXT,
     	start datetime NOT NULL,
     	end   datetime NOT NULL,
-    	urlLink   TEXT NULL
+    	urlLink   TEXT NULL,
+        PRIMARY KEY (id)
 		);
