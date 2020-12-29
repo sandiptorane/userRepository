@@ -10,11 +10,9 @@ import (
 	"userRepository/internal/validation"
 )
 
-
-
 //SignIn endpoint will allow user to enter in the system
-func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request){
-	w.Header().Set("Content-Type","application/json")
+func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var creds *user.Credential
 	err := json.NewDecoder(req.Body).Decode(&creds)
 	if err != nil {
@@ -23,20 +21,23 @@ func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request){
 		return
 	}
 
-	if validationError := validation.ValidateCredential(creds);validationError!=nil{   //validate inputs of user
-		validation.DisplayError(w,validationError)
+	if validationError := validation.ValidateCredential(creds); validationError != nil { //validate inputs of user
+		validation.DisplayError(w, validationError)
 		return
 	}
-
-	if !handler.Repository.UserExists(creds.Username,creds.Password){  //check user exists or not in database
+	if !handler.Repository.UserExists(creds.Username, creds.Password) { //check user exists or not in database
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("You are Unauthorized to access the application.\n"))
 		log.Println("sign in unsuccessful")
 		return
 	}
 
-	token.CreateToken(creds.Username,w,req)
-	fmt.Fprintf(w,"Welcome %s !\n",creds.Username)
+	tokenString, err := token.CreateToken(creds.Username, w)
+	if err != nil {
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+	fmt.Fprintf(w, "Welcome %s !\n", creds.Username)
+	fmt.Fprintln(w, tokenString)
 	log.Println("user successfully signed in")
 }
-

@@ -6,10 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
+	"userRepository/internal/vipers"
 )
 
-// jwt secretkey
-var jwtKey = []byte("perennial")
+// jwt secretKey
+var jwtKey = vipers.GetJwtKey()
 
 // Create a struct that will be encoded to a JWT.
 // We add jwt.StandardClaims as an embedded type, to provide fields like expiry time
@@ -19,7 +20,7 @@ type Claims struct {
 }
 
 //SetToken will set the  token for signed user
-func CreateToken(userName string, w http.ResponseWriter,r *http.Request) {
+func CreateToken(userName string, w http.ResponseWriter) (string, error) {
 	log.Println("set token for signed user")
 	expirationTime := time.Now().Add(5 * time.Minute)
 	// Create the JWT claims, which includes the username and expiry time
@@ -37,21 +38,22 @@ func CreateToken(userName string, w http.ResponseWriter,r *http.Request) {
 	if err != nil {
 		// If there is an error in creating the JWT return an internal server error
 		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return "", err
 	}
 	// we also set an expiry time which is the same as the token itself
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   tokenString,
-		Path: "/",
+		Path:    "/",
 		Expires: expirationTime,
 	})
-	fmt.Fprintln(w,tokenString)
+	return tokenString, nil
 }
 
+//IsAuthorized authorise protected endpoints
 func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		//tokenString := Tokenstore.token
+
 		c, err := req.Cookie("token")
 		if err != nil {
 			// If the cookie is not set, return an unauthorized status
@@ -66,7 +68,7 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 		tkn, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
-		if err != nil || !tkn.Valid{
+		if err != nil || !tkn.Valid {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -82,14 +84,14 @@ func ClearToken(w http.ResponseWriter,req *http.Request) {
 	if err != nil {
 		// If the cookie is not set, return an unauthorized status
 		w.WriteHeader(http.StatusUnauthorized)
-		log.Errorln("cookie error:",err)
+		log.Errorln("cookie error:", err)
 		return
 	}
 	c.Value = ""
 	c.Name = "token"
 	c.MaxAge = -1
 	http.SetCookie(w, c)
-	fmt.Fprintln(w,"signed out successfully")
+	fmt.Fprintln(w, "signed out successfully")
 	log.Println("signed out successfully")
 }
 
@@ -98,7 +100,7 @@ func GetUserName(w http.ResponseWriter,req *http.Request) (userName string) {
 	c, err := req.Cookie("token")
 	if err != nil {
 		// If the cookie is not set, return an unauthorized status
-		fmt.Fprintln(w,err)
+		fmt.Fprintln(w, err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -109,15 +111,7 @@ func GetUserName(w http.ResponseWriter,req *http.Request) (userName string) {
 	tkn, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !tkn.Valid {
+	if err != nil || !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

@@ -61,3 +61,20 @@ func GetDbconfigs() (DbConfig,error){
 		DbName: dbname,
 	},nil
 }
+
+func GetJwtKey()(key []byte) {
+	log.Println("fetching jwtkey configs")
+	v := viper.New()
+	v.SetConfigName("config") // config file name
+	v.SetConfigType("yaml")
+	v.AddConfigPath("./configs") // config file path
+	v.AddConfigPath("../configs")
+	v.AddConfigPath(".")
+
+	err := v.ReadInConfig()
+	if err != nil {
+		log.Fatal("Unable to fetch port")
+	}
+	key = []byte(v.GetString("key.jwtKey"))
+	return key
+}

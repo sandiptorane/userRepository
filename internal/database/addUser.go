@@ -14,24 +14,24 @@ type Register interface {
 var alreadyExistsError = "user is already present please choose another username"
 
 //AddUser will register user's details in userRepository table
-func (repository *Datastore)AddUser(p *user.Person) error{
-	if repository.userAlreadyExists(p.Username){
-		return errors.New(fmt.Sprintf("%s %s",p.Username, alreadyExistsError))
+func (repository *Datastore)AddUser(p *user.Person) error {
+	if repository.userAlreadyExists(p.Username) {
+		return errors.New(fmt.Sprintf("%s %s", p.Username, alreadyExistsError))
 	}
 	query := `INSERT INTO userRepository(username,password,firstname,lastname,age,gender,city,country,phone,email,githubUsername) VALUES
 			(?,?,?,?,?,?,?,?,?,?,?)`
-	_,err := repository.Db.Exec(query,p.Username,p.Password,p.Firstname,p.Lastname,p.Age,p.Gender,p.City,p.Country,p.Phone,p.EmailId,p.GithubUsername)
-   return err
+	_, err := repository.Db.Exec(query, p.Username, p.Password, p.Firstname, p.Lastname, p.Age, p.Gender, p.City, p.Country, p.Phone, p.EmailId, p.GithubUsername)
+	return err
 }
 
-func (repository *Datastore)userAlreadyExists(username string) bool{
+func (repository *Datastore)userAlreadyExists(username string) bool {
 	query := `SELECT username FROM userRepository WHERE username =?`
 	var returnedUser string
-	err := repository.Db.QueryRowx(query,username).Scan(&returnedUser)
-	if err != nil && returnedUser == ""{
+	err := repository.Db.QueryRowx(query, username).Scan(&returnedUser)
+	if err != nil && returnedUser == "" {
 		return false
 	}
-	if username == returnedUser{
+	if username == returnedUser {
 		return true
 	}
 	return false

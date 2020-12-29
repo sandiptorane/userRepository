@@ -24,7 +24,7 @@ func (repository *Datastore)GetProfile(username string)(*user.Person,error){
 	return &person, nil
 }
 
-func (repository *Datastore)UpdateProfile(p *user.Person)error{
+func (repository *Datastore)UpdateProfile(p *user.Person)error {
 	query := `UPDATE userRepository SET password=?,firstname=?,lastname=?,age=?,gender=?,city=?,country=?,phone=?,email=?,githubUsername=? WHERE username = ?`
 	changes, err := repository.Db.Preparex(query)
 	if err != nil {

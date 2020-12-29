@@ -12,7 +12,7 @@ import (
 )
 
 func ValidateUser(person *user.Person) error{
-	log.Println("validate registration details entered by new user")
+	log.Println("validate details entered by user")
 	v := validator.New()
 	err := v.Struct(person)
 	return err
@@ -30,7 +30,6 @@ func ValidateTask(task *tasks.Task) error{
 	err := v.Struct(task)
 	return err
 }
-
 
 func ValidateTime(startTask string, endTask string) error{
 	const (
