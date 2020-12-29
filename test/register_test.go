@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -74,7 +73,7 @@ func TestRegister(t *testing.T){
 		 }
 		 response := httptest.NewRecorder()
 		 router(userRepo).ServeHTTP(response, req)
-		 assert.Equal(t, 200, response.Code, "ok response expected")
+		 checkStatus(t,http.StatusOK,response.Code)
 		 expectedResponse := tc.expectedResponse
 		 actualResponse := response.Body.String()
 		 checkResponse(t, actualResponse, expectedResponse)

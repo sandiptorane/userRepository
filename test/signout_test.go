@@ -39,6 +39,16 @@ func TestSignOut(t *testing.T){
 		req.AddCookie(cookie[0])
 		response := httptest.NewRecorder()
 		r.ServeHTTP(response,req)
-		fmt.Println(response.Body.String())
+		actual := response.Body.String()
+		expected := fmt.Sprintf("signed out successfully\n")
+		checkStatus(t,http.StatusOK,response.Code)
+		checkSignoutResponse(t,expected,actual)
 	})
+}
+
+func checkSignoutResponse(t *testing.T,expected string,actual string){
+	t.Helper()
+	if expected!=actual{
+		t.Error("wont:",expected,"but got:",actual)
+	}
 }

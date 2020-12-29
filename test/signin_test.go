@@ -27,7 +27,7 @@ func getSigninTestCases() []testCase{
 			name: "Test for signin successful",
 			body: []byte(`{"username":"sandip123","password":"sandip@123"}`),
 			buildStubs: func(userRepo *database.MockUserRepository) {
-				userRepo.EXPECT().UserExists("sandip123", "sandip@123").Return(true)
+				userRepo.EXPECT().UserExists("sandip123", gomock.Any()).Return(true)
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedResponse:   "Welcome",
@@ -52,7 +52,7 @@ func signInRouter(userRepo *database.MockUserRepository) *mux.Router{
 	return r
 }
 
-func TestSignInMock(t *testing.T){
+func TestSignIn(t *testing.T){
 	testCases := getSigninTestCases()
 	for i := range testCases {
 		tc := testCases[i]
@@ -79,7 +79,7 @@ func TestSignInMock(t *testing.T){
 
 			expectedResponse := tc.expectedResponse
 			actualResponse := response.Body.String()
-			assertBody(t, expectedResponse, actualResponse)
+			checkSigninResponse(t, expectedResponse, actualResponse)
 		})
 	}
 }
@@ -91,7 +91,7 @@ func checkStatus(t *testing.T,expectedCode int,actualCode int){
 	}
 }
 
-func assertBody(t *testing.T,expected string,actual string){
+func checkSigninResponse(t *testing.T,expected string,actual string){
 	t.Helper()
 	if !strings.Contains(actual,expected){
 		t.Errorf("unsuccessful:  output should contains %s\n but got %s\n",expected,actual)

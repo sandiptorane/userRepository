@@ -2,73 +2,82 @@ package test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"userRepository/internal/database"
 	"userRepository/internal/handlers"
 	"userRepository/internal/token"
-	"userRepository/internal/user"
 )
 
-func getProfileRouter(userRepo *database.MockUserRepository) *mux.Router{
+func getAddTaskRouter(userRepo *database.MockUserRepository) *mux.Router{
 	handler := handlers.NewHandler(userRepo)
 	r := mux.NewRouter()
 	r.HandleFunc("/signin", handler.SignIn).Methods("POST")
-	r.HandleFunc("/profile",token.IsAuthorized(handler.GetProfile)).Methods("GET")
+	r.HandleFunc("/task",token.IsAuthorized(handler.AddTasks)).Methods("POST")
 	return r
 }
 
-type getProfileTestCase struct {
+type addTaskTestCase struct {
 	name string
 	username string
 	password string
+	body []byte
 	buildStubs func(userRepo *database.MockUserRepository)
 	expectedStatusCode int
 	expectedResponse string
 }
 
-func getProfileTestCases() []getProfileTestCase{
-	testCases := []getProfileTestCase{
+func getAddTaskTestCases() [] addTaskTestCase{
+	testCases := []addTaskTestCase{
 		{
-			name: "Successful",
+			name:     "Task Added successfully",
 			username: "sandip123",
 			password: "sandip@123",
+			body: []byte( `{
+			"name" :"project meeting",
+    		"description" : "discussion",
+    		"start": "2020-12-03 02:54:24",
+    		"end": "2020-12-03 03:57:24",
+			"urlLink" : "https://meet.google.com/sdjljire"
+		}`),
 			buildStubs: func(userRepo *database.MockUserRepository) {
-				username := "sandip123"
-				userRepo.EXPECT().GetProfile(username).Return(&user.Person{
-									Username:       "sandip123",
-									Password:       "sandip@123",
-									Firstname:      "sandip",
-									Lastname:       "torane",
-									Age:            22,
-									Gender:         "male",
-									City:           "Ichalkaranji",
-									Country:        "India",
-									Phone:          "7945867158",
-									EmailId:        "sandip@gmail.com",
-									GithubUsername: "https://github.com/sandip"},nil)
+				userRepo.EXPECT().AddTask(gomock.Any(),"sandip123")
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse: `{"username":"sandip123","password":"sandip@123","firstname":"sandip","lastname":"torane","age":22,"gender":"male","city":"Ichalkaranji","country":"India","phone":"7945867158","email":"sandip@gmail.com","githubUsername":"https://github.com/sandip"}`,
+			expectedResponse:   fmt.Sprintf("Task added\n"),
 		},
-
+		{
+			name:     "Validate start and end time format",
+			username: "sandip123",
+			password: "sandip@123",
+			body: []byte( `{
+			"name" :"project meeting",
+    		"description" : "discussion",
+    		"start": "2020-12-03 02:24",
+    		"end": "2020-12-03 03:57:24"
+		}`),
+			buildStubs: func(userRepo *database.MockUserRepository) {
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   fmt.Sprintf("start and end task format should be : YYYY-MM-DD Hr:min:sec\n"),
+		},
 	}
 	return testCases
 }
 
-func TestGetProfile(t *testing.T){
-	testCases := getProfileTestCases()
+func TestAddTask(t *testing.T){
+	testCases := getAddTaskTestCases()
 	for i := range testCases {
 		tc := testCases[i]
 		t.Run(tc.name,func(t *testing.T) {
 			controller := gomock.NewController(t)
 			defer controller.Finish()
 			userRepo := database.NewMockUserRepository(controller)
-
+			router := getAddTaskRouter(userRepo)  //mux router
 			//first sign in
 			userRepo.EXPECT().UserExists(tc.username, tc.password).Return(true)
 			body := []byte(`{"username":"`+tc.username+`","password":"`+tc.password+`"}`)
@@ -77,19 +86,19 @@ func TestGetProfile(t *testing.T){
 				t.Fatal(err)
 			}
 			response := httptest.NewRecorder()
-			router := getProfileRouter(userRepo)  //mux router
 			router.ServeHTTP(response, req)
 
 			result := response.Result()
-			cookie := result.Cookies()
+			cookie := result.Cookies()  //jwt auth token stored in the cookie
 
-			//GetProfile handler
+			//AddTasks handler
 			tc.buildStubs(userRepo)
-			req, err = http.NewRequest("GET", "/profile",nil)
+			req, err = http.NewRequest("POST", "/task",bytes.NewReader(tc.body))
 			if err != nil {
 				t.Fatal(err)
 			}
 			response = httptest.NewRecorder()
+
 			if len(cookie)!=0 {
 				req.AddCookie(cookie[0])
 			}
@@ -98,18 +107,19 @@ func TestGetProfile(t *testing.T){
 
 			expectedResponse := tc.expectedResponse
 			actualResponse := response.Body.String()
-			checkGetProfileResponse(t, expectedResponse, actualResponse)
+			checkAddTaskResponse(t, expectedResponse, actualResponse)
 		})
 	}
 }
 
-func checkGetProfileResponse(t *testing.T,expected string,actualString string){
+func checkAddTaskResponse(t *testing.T,expected string,actualString string){
 	t.Helper()
-	if !strings.Contains(actualString,expected){
-		t.Errorf("\n output excpected '%s' \n but got '%s':",expected,actualString)
-
+	if actualString!=expected{
+		t.Errorf("\n output excpected '%s' \n but got '%s'",expected,actualString)
 	}
 }
+
+
 
 
 
