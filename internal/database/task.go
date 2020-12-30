@@ -27,7 +27,7 @@ func (repository *Datastore)GetTasks(username string,startDate time.Time,endDate
 	var taskList []tasks.FilteredTasks
 	formattedFrom := startDate.Format("2006-01-02 15:04:05")
 	formattedTo := endDate.Format("2006-01-02 15:04:05")
-	query := `SELECT id,name,description,start,end FROM task WHERE (start BETWEEN ? AND ?) AND username = ?`
+	query := `SELECT id,name,description,start,end,urlLink FROM task WHERE (start BETWEEN ? AND ?) AND username = ?`
 	err := repository.Db.Select(&taskList, query, formattedFrom, formattedTo, username)
 	return taskList, err
 }
@@ -36,7 +36,7 @@ func (repository *Datastore)GetSingleTask(username string,id int,startDate time.
 	var task tasks.FilteredTasks
 	formattedFrom := startDate.Format("2006-01-02 15:04:05")
 	formattedTo := endDate.Format("2006-01-02 15:04:05")
-	query := `SELECT id,name,description,start,end FROM task WHERE (start BETWEEN ? AND ?) AND (username = ? AND id = ?)`
+	query := `SELECT id,name,description,start,end,urlLink FROM task WHERE (start BETWEEN ? AND ?) AND (username = ? AND id = ?)`
 	err := repository.Db.Get(&task, query, formattedFrom, formattedTo, username,id)
 	return &task, err
 }

@@ -6,7 +6,7 @@ type Task struct {
 	Description string `json:"description" validate:"required"`
 	Start       string `json:"start" validate:"required"` //format= YYYY-MM-DD Hr:min:sec
 	End         string `json:"end" validate:"required"`   //format= YYYY-MM-DD Hr:min:sec
-	UrlLink     string `json:"urlLink,omitempty" validate:"omitempty,url"`
+	UrlLink     string `json:"urlLink,omitempty" validate:"omitempty,url" db:"urlLink"`
 }
 
 type FilteredTasks struct {

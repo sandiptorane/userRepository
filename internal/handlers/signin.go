@@ -10,6 +10,10 @@ import (
 	"userRepository/internal/validation"
 )
 
+type tokenString struct {
+	Token string `json:"token"`
+}
+
 //SignIn endpoint will allow user to enter in the system
 func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -32,12 +36,12 @@ func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request) {
 		return
 	}
 
-	tokenString, err := token.CreateToken(creds.Username, w)
+	tokenStr, err := token.CreateToken(creds.Username, w,req)
 	if err != nil {
 		fmt.Fprintln(w, err.Error())
 		return
 	}
-	fmt.Fprintf(w, "Welcome %s !\n", creds.Username)
-	fmt.Fprintln(w, tokenString)
+	//fmt.Fprintf(w, "Welcome %s !\n", creds.Username)
+	json.NewEncoder(w).Encode(tokenString{Token: tokenStr,})
 	log.Println("user successfully signed in")
 }

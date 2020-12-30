@@ -6,5 +6,12 @@ func HashPassword(password string)(hash string){
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
 	return string(bytes)
 }
-//func HashPassword(credential *user.Credential){
+
+func VerifyPassword(hashedPassword,userPassword string) bool{
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword),[]byte(userPassword))
+	if err==nil{
+		return true
+	}
+	return false
+}
 

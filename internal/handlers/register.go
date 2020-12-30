@@ -5,6 +5,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"userRepository/internal/hashing"
 	"userRepository/internal/user"
 	"userRepository/internal/validation"
 )
@@ -35,7 +36,7 @@ func (handler *Handlers)Registration(w http.ResponseWriter,req *http.Request) {
 		validation.DisplayError(w, validationError)
 		return
 	}
-    //person.Password= hashing.HashPassword(person.Password)  //encrypt/hash password
+    person.Password= hashing.HashPassword(person.Password)  //encrypt/hash password
 	err = handler.Repository.AddUser(person) //store registration data into database userRepository
 	if err != nil {
 		fmt.Fprint(w, err.Error())

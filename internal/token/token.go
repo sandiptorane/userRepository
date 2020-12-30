@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"strings"
 	"time"
 	"userRepository/internal/vipers"
 )
@@ -20,7 +21,7 @@ type Claims struct {
 }
 
 //SetToken will set the  token for signed user
-func CreateToken(userName string, w http.ResponseWriter) (string, error) {
+func CreateToken(userName string, w http.ResponseWriter,r *http.Request) (string, error) {
 	log.Println("set token for signed user")
 	expirationTime := time.Now().Add(5 * time.Minute)
 	// Create the JWT claims, which includes the username and expiry time
@@ -40,28 +41,26 @@ func CreateToken(userName string, w http.ResponseWriter) (string, error) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return "", err
 	}
-	// we also set an expiry time which is the same as the token itself
-	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Path:    "/",
-		Expires: expirationTime,
-	})
+	bearer := "Bearer "+tokenString
+	w.Header().Set("Authorization",bearer)  //set token in Authorization Bearer Token header
+	r.Header.Set("Authorization",bearer)
 	return tokenString, nil
+
 }
 
 //IsAuthorized authorise protected endpoints
 func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		c, err := req.Cookie("token")
-		if err != nil {
-			// If the cookie is not set, return an unauthorized status
+		log.Println("Authenticating user")
+		auth := req.Header.Get("Authorization")  //jwt-token stored in Bearer Token Authorization header
+		//log.Println("auth token:",auth)
+		tokenPart := strings.Split(auth," ")
+		if len(tokenPart)!=2{
 			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, "Not Authorized")
+			fmt.Fprintln(w,"Not Authorized")
 			return
 		}
-		tokenString := c.Value
+		tokenString := tokenPart[1]  //tokenPart[1] contains actual token string
 		claims := &Claims{}
 
 		// Parse the JWT string and store the result in `claims`.
@@ -80,31 +79,23 @@ func IsAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handle
 
 //ClearToken delete the token of signed user while sign out
 func ClearToken(w http.ResponseWriter,req *http.Request) {
-	c, err := req.Cookie("token")
-	if err != nil {
-		// If the cookie is not set, return an unauthorized status
-		w.WriteHeader(http.StatusUnauthorized)
-		log.Errorln("cookie error:", err)
-		return
-	}
-	c.Value = ""
-	c.Name = "token"
-	c.MaxAge = -1
-	http.SetCookie(w, c)
+	w.Header().Set("Authorization","")
+	req.Header.Set("Authorization","")
 	fmt.Fprintln(w, "signed out successfully")
 	log.Println("signed out successfully")
 }
 
 //GetUsername will return user if signed in
 func GetUserName(w http.ResponseWriter,req *http.Request) (userName string) {
-	c, err := req.Cookie("token")
-	if err != nil {
-		// If the cookie is not set, return an unauthorized status
-		fmt.Fprintln(w, err)
+	auth := req.Header.Get("Authorization")  //jwt-token stored in Bearer Token Authorization header
+	//log.Println("auth token:",auth)
+	tokenPart := strings.Split(auth," ")
+	if len(tokenPart)!=2{
 		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w,"Not Authorized")
 		return
 	}
-	tokenString := c.Value
+	tokenString := tokenPart[1]  //tokenPart[1] contains actual token string
 	claims := &Claims{}
 
 	// Parse the JWT string and store the result in `claims`.
