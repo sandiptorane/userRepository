@@ -12,11 +12,16 @@ import (
 
 func main() {
 	datastore, err := database.DbConnect()
-	if err != nil {        //if not able to connect with database then terminate the application
+	if err != nil { //if not able to connect with database then terminate the application
 		log.Fatal("not able connect with server database: application terminated")
 	}
-	handler := handlers.NewHandler(datastore)
+	handler := handlers.NewHandler(datastore)   //
+	router := initRouter(handler)    //initialise mux router
+	port := vipers.GetPort()
+	log.Fatal(http.ListenAndServe(port, router))
+}
 
+func initRouter(handler *handlers.Handlers)*mux.Router{
 	r := mux.NewRouter()
 	r.HandleFunc("/register", handler.Registration).Methods("POST")
 	r.HandleFunc("/signin", handler.SignIn).Methods("POST")
@@ -27,9 +32,5 @@ func main() {
 	r.HandleFunc("/task", token.IsAuthorized(handler.GetTasks)).Methods("GET")
 	r.HandleFunc("/task/{id}", token.IsAuthorized(handler.GetSingleTask)).Methods("GET")
 	r.HandleFunc("/signout", token.IsAuthorized(handler.SignOut)).Methods("POST")
-	port := vipers.GetPort()
-	log.Fatal(http.ListenAndServe(port, r))
-
-	//close database
-	datastore.Db.Close()
+	return r
 }
