@@ -28,7 +28,8 @@ func TestSignOut(t *testing.T){
 	}
 	response := httptest.NewRecorder()
 	r.ServeHTTP(response,req)
-	cookie := response.Result().Cookies()
+
+	auth := req.Header.Get("Authorization")  //jwt auth token stored in the Bearer token Authorization header
 
 	t.Run("Test for sign out:",func(t *testing.T){
 		r.HandleFunc("/signout", token.IsAuthorized(handler.SignOut)).Methods("POST")
@@ -36,9 +37,10 @@ func TestSignOut(t *testing.T){
 		if err!=nil{
 			t.Fatal(err)
 		}
-		req.AddCookie(cookie[0])
+		req.Header.Set("Authorization",auth)
 		response := httptest.NewRecorder()
 		r.ServeHTTP(response,req)
+
 		actual := response.Body.String()
 		expected := fmt.Sprintf("signed out successfully\n")
 		checkStatus(t,http.StatusOK,response.Code)

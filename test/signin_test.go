@@ -30,7 +30,7 @@ func getSigninTestCases() []testCase{
 				userRepo.EXPECT().UserExists("sandip123", gomock.Any()).Return(true)
 			},
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   "Welcome",
+			expectedResponse:   "token",
 		},
 		{
 			name: "Test for unauthorised user",
@@ -69,12 +69,8 @@ func TestSignIn(t *testing.T){
 			r := signInRouter(userRepo)  //mux router
 			r.ServeHTTP(response, req)
 
-			result := response.Result()
-			if len(result.Cookies()) != 0 { //token stored in cookie
-				cookie := result.Cookies()
-				fmt.Println("cookie:", cookie[0])
-			}
-
+			auth := req.Header.Get("Authorization") //jwt auth token stored in the Bearer token Authorization header
+			fmt.Println("Authorization:",auth)
 			checkStatus(t,tc.expectedStatusCode,response.Code)
 
 			expectedResponse := tc.expectedResponse

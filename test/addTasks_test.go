@@ -88,8 +88,7 @@ func TestAddTask(t *testing.T){
 			response := httptest.NewRecorder()
 			router.ServeHTTP(response, req)
 
-			result := response.Result()
-			cookie := result.Cookies()  //jwt auth token stored in the cookie
+			auth := req.Header.Get("Authorization")  //jwt auth token stored in the Bearer token Authorization header
 
 			//AddTasks handler
 			tc.buildStubs(userRepo)
@@ -97,11 +96,9 @@ func TestAddTask(t *testing.T){
 			if err != nil {
 				t.Fatal(err)
 			}
+			req.Header.Set("Authorization",auth)
 			response = httptest.NewRecorder()
 
-			if len(cookie)!=0 {
-				req.AddCookie(cookie[0])
-			}
 			router.ServeHTTP(response,req)
 			checkStatus(t,tc.expectedStatusCode,response.Code)
 
