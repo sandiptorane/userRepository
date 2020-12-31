@@ -23,7 +23,7 @@ type Claims struct {
 //Store the created token in tokenStore
 var  tokenStore = make(map[string]string)
 
-//SetToken will set the  token for signed user
+//CreateToken will generate the  token for signed user
 func CreateToken(userName string, w http.ResponseWriter,r *http.Request) (string, error) {
 	log.Println("set token for signed user")
 	expirationTime := time.Now().Add(5 * time.Minute)
