@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"userRepository/internal/database"
 	"userRepository/internal/handlers"
-	"userRepository/internal/token"
 	"userRepository/internal/vipers"
+	"userRepository/pkg/token"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	if err != nil { //if not able to connect with database then terminate the application
 		log.Fatal("not able connect with server database: application terminated")
 	}
-	handler := handlers.NewHandler(datastore)   //
+	handler := handlers.NewHandler(datastore)   //initialise handler
 	router := initRouter(handler)    //initialise mux router
 	port := vipers.GetPort()
 	log.Fatal(http.ListenAndServe(port, router))

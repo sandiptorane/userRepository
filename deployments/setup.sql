@@ -4,7 +4,7 @@ USE userRepository;
 
 CREATE TABLE IF NOT EXISTS userRepository(
 				username VARCHAR(50),
-				password TEXT NOT NULL,
+				password VARCHAR(61) NOT NULL,
                 firstname TEXT NOT NULL,
                 lastname TEXT NOT NULL,
                 age INTEGER NOT NULL,
