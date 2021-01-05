@@ -7,12 +7,14 @@ import (
 	"userRepository/internal/vipers"
 )
 
+//Datastore holds Database connection and Methods
 type Datastore  struct {
 	Db *sqlx.DB
 }
 
+//initialize Datastore with Db
 func DbConnect() (*Datastore,error) {
-	//get configs
+	//get configs for database connection
 	dbConf, err := vipers.GetDbconfigs()
 	if err != nil {
 		log.Fatal(err)

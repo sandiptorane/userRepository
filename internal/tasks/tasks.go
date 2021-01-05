@@ -9,7 +9,9 @@ type Task struct {
 	UrlLink     string `json:"urlLink,omitempty" validate:"omitempty,url" db:"urlLink"`
 }
 
+
+//FilteredTasks to store task details returned from the database
 type FilteredTasks struct {
-	Id int
+	Id int  //Id is auto incremented in the database
 	Task
 }

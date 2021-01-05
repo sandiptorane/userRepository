@@ -5,9 +5,10 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"userRepository/internal/token"
+	"userRepository/pkg/token"
 )
 
+//githubInfo contains github account details
 type githubInfo struct {
 	GithubUsername string `json:"githubUsername"`
 }
@@ -16,19 +17,21 @@ func newGithub() *githubInfo {
 	return &githubInfo{}
 }
 
-//Github will print github accounts details
+//Github will print github accounts details og logged user
 func (handler *Handlers)Github(w http.ResponseWriter,req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	userName := token.GetUserName(w, req)
-	log.Println(userName)
 	log.Println("getting github details")
+	username := token.GetUserName(w, req)
 	github := newGithub()
-	github.GithubUsername = handler.Repository.GetGithub(userName)
+
+	//get github account details from database
+	github.GithubUsername = handler.Repository.GetGithub(username)
 	if github.GithubUsername == "" {
 		fmt.Fprintln(w, "Github account doesn't exist please update the profile")
 		return
 	}
-	err := json.NewEncoder(w).Encode(github)
+
+	err := json.NewEncoder(w).Encode(github)   //display github account details
 	if err != nil {
 		fmt.Fprintln(w, err)
 	}

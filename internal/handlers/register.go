@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"userRepository/internal/hashing"
 	"userRepository/internal/user"
-	"userRepository/internal/validation"
+	"userRepository/pkg/validation"
 )
 
+//newUser initialize the user.Person
 func newUser() *user.Person {
 	return &user.Person{}
 }
@@ -24,19 +25,20 @@ func (handler *Handlers)Registration(w http.ResponseWriter,req *http.Request) {
 		return
 	}
 
-	person := newUser()
-	err := json.NewDecoder(req.Body).Decode(&person)
+	person := newUser()  //initialize the person
+	err := json.NewDecoder(req.Body).Decode(&person)   //Decode person from json
 	if err != nil {
 		fmt.Fprintln(w, err.Error())
 		return
 	}
 
-	validationError := validation.ValidateUser(person) //validate inputs of user
+	validationError := validation.ValidateUser(person) //validate inputs of user and display errors if any
 	if validationError != nil {
 		validation.DisplayError(w, validationError)
 		return
 	}
     person.Password= hashing.HashPassword(person.Password)  //encrypt/hash password
+
 	err = handler.Repository.AddUser(person) //store registration data into database userRepository
 	if err != nil {
 		fmt.Fprint(w, err.Error())

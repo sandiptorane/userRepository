@@ -12,6 +12,7 @@ func GetPort()(port string) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath("./configs") // config file path
 	v.AddConfigPath("../configs")
+	v.AddConfigPath("../../configs")
 	v.AddConfigPath(".")
 
 	err := v.ReadInConfig()
@@ -39,6 +40,7 @@ func GetDbconfigs() (DbConfig,error){
 	v.SetConfigType("yaml")
 	v.AddConfigPath("./configs") // config file path
 	v.AddConfigPath("../configs")
+	v.AddConfigPath("../../configs")
 	v.AddConfigPath(".")
 	err := v.ReadInConfig()
 	if err != nil {
@@ -69,11 +71,11 @@ func GetJwtKey()(key []byte) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath("./configs") // config file path
 	v.AddConfigPath("../configs")
+	v.AddConfigPath("../../configs")
 	v.AddConfigPath(".")
-
 	err := v.ReadInConfig()
 	if err != nil {
-		log.Fatal("Unable to fetch port")
+		log.Fatal("unable to fetch jwtKey err :",err.Error())
 	}
 	key = []byte(v.GetString("key.jwtKey"))
 	return key

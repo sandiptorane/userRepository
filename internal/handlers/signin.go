@@ -5,9 +5,9 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"userRepository/internal/token"
 	"userRepository/internal/user"
-	"userRepository/internal/validation"
+	"userRepository/pkg/token"
+	"userRepository/pkg/validation"
 )
 
 type tokenString struct {
@@ -36,12 +36,14 @@ func (handler *Handlers)SignIn(w http.ResponseWriter,req *http.Request) {
 		return
 	}
 
+	//Create token for signed user
 	tokenStr, err := token.CreateToken(creds.Username, w,req)
 	if err != nil {
 		fmt.Fprintln(w, err.Error())
 		return
 	}
-	//fmt.Fprintf(w, "Welcome %s !\n", creds.Username)
+	//display created token
 	json.NewEncoder(w).Encode(tokenString{Token: tokenStr,})
+
 	log.Println("user successfully signed in")
 }

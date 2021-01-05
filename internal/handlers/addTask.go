@@ -6,8 +6,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"userRepository/internal/tasks"
-	"userRepository/internal/token"
-	"userRepository/internal/validation"
+	"userRepository/pkg/token"
+	"userRepository/pkg/validation"
 )
 
 //add current user's task
@@ -19,15 +19,18 @@ func (handler *Handlers)AddTasks(w http.ResponseWriter,req *http.Request) {
 		fmt.Fprintln(w, err.Error())
 		return
 	}
-	validationError := validation.ValidateTask(task)
+
+	validationError := validation.ValidateTask(task)  //validate task inputs
 	if validationError != nil {
 		validation.DisplayError(w, validationError)
 		return
 	}
-	if err := validation.ValidateTime(task.Start, task.End); err != nil {
+	if err := validation.ValidateTime(task.Start, task.End); err != nil {   //validate time for YYYY-MM-DD hh:mm:sec format
 		fmt.Fprintln(w, err)
 		return
 	}
+
+	//AddTask to database
 	handler.Repository.AddTask(task, username)
 	fmt.Fprintln(w, "Task added")
 	log.Println("Task added by the user")
